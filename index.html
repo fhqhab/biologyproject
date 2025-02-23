@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Эко-Сортировка Мусора</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+            background-color: #e0f7fa;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #bins-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            padding: 0 5%;
+            box-sizing: border-box;
+        }
+
+        .bin {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .bin:hover {
+            transform: translateY(-5px);
+        }
+
+        .bin img {
+            width: 110px;
+            height: auto;
+            filter: brightness(1);
+            pointer-events: none;
+        }
+
+      /* Контейнер для стекла - синий */
+      #glass-bin img { 
+            filter: brightness(1.1) sepia(1) hue-rotate(190deg) saturate(3);
+        } /* Синий для стекла */
+        #paper-bin img { 
+            filter: brightness(1.1) sepia(1) hue-rotate(70deg) saturate(3);
+        } /* Зеленый для бумаги */
+        #plastic-bin img { 
+            filter: brightness(1.1) sepia(1) hue-rotate(10deg) saturate(4);
+}
+
+        .bin span {
+            margin-top: 8px;
+            font-size: 16px;
+            color: #2c3e50;
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        .trash {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            cursor: grab;
+            transition: transform 0.2s;
+            user-select: none;
+            image-rendering: crisp-edges;
+        }
+
+        #score-timer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 24px;
+            color: #2c3e50;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #score {
+            white-space: nowrap;
+        }
+
+        .progress-bar-container {
+            width: 300px;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-left: 30px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        #start-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 40px;
+            font-size: 28px;
+            color: white;
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+
+        #start-button:hover {
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #round-end {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.97);
+            padding: 40px 60px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+        }
+
+        #round-end h1 {
+            color: #2c3e50;
+            margin: 0 0 25px 0;
+            font-size: 36px;
+        }
+
+        #final-score {
+            font-size: 32px;
+            font-weight: bold;
+            color: #27ae60;
+            display: block;
+            margin: 15px 0;
+        }
+
+        #restart-button {
+            margin-top: 30px;
+            padding: 15px 35px;
+            font-size: 20px;
+            background: linear-gradient(135deg, #2980b9, #3498db);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        #restart-button:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <button id="start-button">Начать экосортировку!</button>
+    <div id="game-container" class="hidden">
+        <div id="score-timer">
+            <div id="score">♻️ Очки: 0</div>
+            <div class="progress-bar-container">
+                <div class="progress-bar"></div>
+            </div>
+        </div>
+        <div id="bins-container">
+            <div id="glass-bin" class="bin">
+                <img src="img/container.png" alt="Стекло">
+                <span>СТЕКЛО</span>
+            </div>
+            <div id="paper-bin" class="bin">
+                <img src="img/container.png" alt="Бумага">
+                <span>БУМАГА</span>
+            </div>
+            <div id="plastic-bin" class="bin">
+                <img src="img/container.png" alt="Пластик">
+                <span>ПЛАСТИК</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="round-end" class="hidden">
+        <h1>🌱 Раунд завершен! 🌱</h1>
+        <p>Ваш экопоказатель:</p>
+        <span id="final-score">0</span>
+        <button id="restart-button">♻️ Сыграть снова</button>
+    </div>
+
+    <script>
+        const trashTypes = [
+            { type: 'glass', image: 'img/bottle.png' },
+            { type: 'paper', image: 'img/newspaper.png' },
+            { type: 'plastic', image: 'img/bottle-cap.png' }
+        ];
+        
+        const MAX_FALL_SPEED = 8;
+        const BASE_SPEED = 2;
+        let score = 0;
+        let timeLeft = 30;
+        let currentTrash = null;
+        let gameStarted = false;
+        let timerInterval;
+        let trashInterval;
+
+        const elements = {
+            gameContainer: document.getElementById('game-container'),
+            score: document.getElementById('score'),
+            startButton: document.getElementById('start-button'),
+            roundEndScreen: document.getElementById('round-end'),
+            finalScore: document.getElementById('final-score'),
+            restartButton: document.getElementById('restart-button'),
+            progressBar: document.querySelector('.progress-bar')
+        };
+
+        function initGame() {
+            score = 0;
+            timeLeft = 30;
+            gameStarted = true;
+            
+            elements.roundEndScreen.classList.add('hidden');
+            elements.gameContainer.classList.remove('hidden');
+            elements.startButton.classList.add('hidden');
+            document.querySelectorAll('.trash').forEach(trash => trash.remove());
+            
+            startGameLoop();
+            createTrash();
+            updateProgress();
+        }
+
+        function startGameLoop() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateProgress();
+                if (timeLeft <= 0) endGame();
+            }, 1000);
+            
+            trashInterval = setInterval(() => {
+                if (timeLeft > 0) createTrash();
+            }, 2000);
+        }
+
+        function updateProgress() {
+            elements.score.textContent = `♻️ Очки: ${score}`;
+            elements.progressBar.style.width = `${(timeLeft / 30) * 100}%`;
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            clearInterval(trashInterval);
+            gameStarted = false;
+            
+            elements.finalScore.textContent = score;
+            elements.gameContainer.classList.add('hidden');
+            elements.roundEndScreen.classList.remove('hidden');
+        }
+
+        function createTrash() {
+            const trashData = trashTypes[Math.floor(Math.random() * trashTypes.length)];
+            const trash = document.createElement('img');
+            trash.className = 'trash';
+            trash.dataset.type = trashData.type;
+            
+            let variations = [];
+            switch(trashData.image) {
+                case 'img/bottle.png':
+                    variations = ['img/bottle.png', 'img/bottle1.png', 'img/bottle2.png'];
+                    break;
+                case 'img/newspaper.png':
+                    variations = ['img/newspaper.png', 'img/newspaper1.png', 'img/newspaper2.png'];
+                    break;
+                case 'img/bottle-cap.png':
+                    variations = ['img/bottle-cap.png', 'img/bottle-cap1.png', 'img/bottle-cap2.png'];
+            }
+            
+            trash.onerror = function() {
+                this.src = 'placeholder.png';
+                console.error('Ошибка загрузки:', this.dataset.type);
+            };
+            
+            trash.src = variations[Math.floor(Math.random() * variations.length)];
+            trash.style.left = `${Math.random() * 85}vw`;
+            trash.style.top = '-60px';
+            elements.gameContainer.appendChild(trash);
+
+            let position = -60;
+            let speed = BASE_SPEED * (trashData.type === 'glass' ? 2 : trashData.type === 'plastic' ? 1.5 : 1);
+            
+            const fallInterval = setInterval(() => {
+                if (!trash || !gameStarted || (isDragging && currentTrash === trash)) {
+                    clearInterval(fallInterval);
+                    return;
+                }
+                
+                speed = Math.min(speed + 0.01, MAX_FALL_SPEED);
+                position += speed;
+                trash.style.top = `${position}px`;
+                
+                if (position > window.innerHeight) {
+                    trash.remove();
+                    clearInterval(fallInterval);
+                }
+            }, 20);
+        }
+
+        let isDragging = false;
+        let offsetX = 0, offsetY = 0;
+        
+        elements.gameContainer.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('trash')) {
+                e.preventDefault();
+                isDragging = true;
+                currentTrash = e.target;
+                
+                const rect = currentTrash.getBoundingClientRect();
+                offsetX = e.clientX - rect.left;
+                offsetY = e.clientY - rect.top;
+                
+                currentTrash.style.transform = 'scale(1.1) rotate(5deg)';
+            }
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging && currentTrash) {
+                currentTrash.style.left = `${e.clientX - offsetX}px`;
+                currentTrash.style.top = `${e.clientY - offsetY}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!isDragging || !currentTrash) return;
+            isDragging = false;
+            currentTrash.style.transform = '';
+            
+            const trashRect = currentTrash.getBoundingClientRect();
+            const bins = document.querySelectorAll('.bin');
+            
+            let correctBin = Array.from(bins).find(bin => {
+                const binRect = bin.getBoundingClientRect();
+                return (
+                    trashRect.left < binRect.right &&
+                    trashRect.right > binRect.left &&
+                    trashRect.top < binRect.bottom &&
+                    trashRect.bottom > binRect.top
+                );
+            });
+            
+            if (correctBin) {
+                const binType = correctBin.id.split('-')[0];
+                score += binType === currentTrash.dataset.type ? 2 : -1;
+                score = Math.max(0, score);
+                updateProgress();
+            }
+            
+            currentTrash.remove();
+            currentTrash = null;
+        });
+
+        elements.startButton.addEventListener('click', initGame);
+        elements.restartButton.addEventListener('click', initGame);
+    </script>
+</body>
+</html>
