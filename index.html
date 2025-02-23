@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Эко-Сортировка Мусора</title>
     <style>
         body {
@@ -12,6 +12,7 @@
             overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
+            touch-action: manipulation;
         }
 
         #game-container {
@@ -39,6 +40,7 @@
             text-align: center;
             cursor: pointer;
             transition: transform 0.2s;
+            touch-action: none;
         }
 
         .bin:hover {
@@ -52,16 +54,15 @@
             pointer-events: none;
         }
 
-      /* Контейнер для стекла - синий */
-      #glass-bin img { 
+        #glass-bin img { 
             filter: brightness(1.1) sepia(1) hue-rotate(190deg) saturate(3);
-        } /* Синий для стекла */
+        }
         #paper-bin img { 
             filter: brightness(1.1) sepia(1) hue-rotate(70deg) saturate(3);
-        } /* Зеленый для бумаги */
+        }
         #plastic-bin img { 
             filter: brightness(1.1) sepia(1) hue-rotate(10deg) saturate(4);
-}
+        }
 
         .bin span {
             margin-top: 8px;
@@ -79,6 +80,7 @@
             transition: transform 0.2s;
             user-select: none;
             image-rendering: crisp-edges;
+            touch-action: none;
         }
 
         #score-timer {
@@ -305,7 +307,6 @@
             }
             
             trash.onerror = function() {
-                this.src = 'placeholder.png';
                 console.error('Ошибка загрузки:', this.dataset.type);
             };
             
@@ -337,28 +338,35 @@
         let isDragging = false;
         let offsetX = 0, offsetY = 0;
         
-        elements.gameContainer.addEventListener('mousedown', (e) => {
+        function handleStart(e) {
+            const clientX = e.clientX || e.touches[0].clientX;
+            const clientY = e.clientY || e.touches[0].clientY;
+            
             if (e.target.classList.contains('trash')) {
                 e.preventDefault();
                 isDragging = true;
                 currentTrash = e.target;
                 
                 const rect = currentTrash.getBoundingClientRect();
-                offsetX = e.clientX - rect.left;
-                offsetY = e.clientY - rect.top;
+                offsetX = clientX - rect.left;
+                offsetY = clientY - rect.top;
                 
                 currentTrash.style.transform = 'scale(1.1) rotate(5deg)';
             }
-        });
+        }
 
-        document.addEventListener('mousemove', (e) => {
-            if (isDragging && currentTrash) {
-                currentTrash.style.left = `${e.clientX - offsetX}px`;
-                currentTrash.style.top = `${e.clientY - offsetY}px`;
-            }
-        });
+        function handleMove(e) {
+            if (!isDragging || !currentTrash) return;
+            e.preventDefault();
+            
+            const clientX = e.clientX || e.touches[0].clientX;
+            const clientY = e.clientY || e.touches[0].clientY;
+            
+            currentTrash.style.left = `${clientX - offsetX}px`;
+            currentTrash.style.top = `${clientY - offsetY}px`;
+        }
 
-        document.addEventListener('mouseup', () => {
+        function handleEnd() {
             if (!isDragging || !currentTrash) return;
             isDragging = false;
             currentTrash.style.transform = '';
@@ -385,7 +393,14 @@
             
             currentTrash.remove();
             currentTrash = null;
-        });
+        }
+
+        elements.gameContainer.addEventListener('mousedown', handleStart);
+        elements.gameContainer.addEventListener('touchstart', handleStart, { passive: false });
+        document.addEventListener('mousemove', handleMove);
+        document.addEventListener('touchmove', handleMove, { passive: false });
+        document.addEventListener('mouseup', handleEnd);
+        document.addEventListener('touchend', handleEnd);
 
         elements.startButton.addEventListener('click', initGame);
         elements.restartButton.addEventListener('click', initGame);
