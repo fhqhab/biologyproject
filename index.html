@@ -185,6 +185,13 @@
             margin: 15px 0;
         }
 
+        #congrats-message {
+            font-size: 24px;
+            color: #2980b9;
+            margin: 15px 0;
+            min-height: 30px;
+        }
+
         #restart-button {
             margin-top: 30px;
             padding: 15px 35px;
@@ -232,6 +239,7 @@
         <h1>🌱 Раунд завершен! 🌱</h1>
         <p>Ваш экопоказатель:</p>
         <span id="final-score">0</span>
+        <p id="congrats-message"></p>
         <button id="restart-button">♻️ Сыграть снова</button>
     </div>
 
@@ -290,6 +298,7 @@
             startButton: document.getElementById('start-button'),
             roundEndScreen: document.getElementById('round-end'),
             finalScore: document.getElementById('final-score'),
+            congratsMessage: document.getElementById('congrats-message'),
             restartButton: document.getElementById('restart-button'),
             progressBar: document.querySelector('.progress-bar')
         };
@@ -300,6 +309,7 @@
             gameStarted = true;
             
             elements.roundEndScreen.classList.add('hidden');
+            elements.congratsMessage.textContent = "";
             elements.gameContainer.classList.remove('hidden');
             elements.startButton.classList.add('hidden');
             document.querySelectorAll('.trash').forEach(trash => trash.remove());
@@ -332,6 +342,52 @@
             gameStarted = false;
             
             elements.finalScore.textContent = score;
+            
+            const messages = {
+                30: [
+                    "Идеально! 🌟", 
+                    "Природа гордится тобой 🌍", 
+                    "Герой чистоты! 💪"
+                ],
+                25: [
+                    "Отличный результат! 😊",
+                    "Почти идеально! 👍",
+                    "Эксперт по сортировке! ♻️"
+                ],
+                20: [
+                    "Хорошая работа! 🌿",
+                    "Продолжай в том же духе! 💚",
+                    "Уже неплохо! 🌱"
+                ],
+                15: [
+                    "Стараешься - это главное! 👏",
+                    "С каждым разом будет лучше! 🌻",
+                    "Учимся на практике! 📚"
+                ],
+                10: [
+                    "Первый шаг к экологичности! 👣",
+                    "Практика делает совершенным! ✨",
+                    "Не останавливайся! 🚀"
+                ],
+                0: [
+                    "Начни с малого! 🌱",
+                    "В следующий раз получится лучше! 💪",
+                    "Каждая попытка важна! ♻️"
+                ]
+            };
+
+            const thresholds = [30, 25, 20, 15, 10, 0];
+            let selectedMessage = "";
+            
+            for(const threshold of thresholds) {
+                if(score >= threshold) {
+                    const msgArray = messages[threshold];
+                    selectedMessage = msgArray[Math.floor(Math.random() * msgArray.length)];
+                    break;
+                }
+            }
+            
+            elements.congratsMessage.textContent = selectedMessage;
             elements.gameContainer.classList.add('hidden');
             elements.roundEndScreen.classList.remove('hidden');
         }
